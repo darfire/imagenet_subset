@@ -1,3 +1,4 @@
+import sys
 import argparse
 import glob
 import shutil
@@ -11,7 +12,7 @@ def parse_args():
   parser = argparse.ArgumentParser()
 
   parser.add_argument('-i', '--imagenet-dir', help='The imagenet data (needs to have train and val subdirectories)', required=True)
-  parser.add_argument('-o', '--output-dir', help='Output directory')
+  parser.add_argument('-o', '--output-dir', help='Output directory', required=True)
                       
   parser.add_argument('-c', '--n-classes', help='number of classes to extract', default=-1, type=int)
   parser.add_argument('-n', '--n-items-per-class', help='number of items per class', default=-1, type=int)
@@ -26,13 +27,17 @@ def parse_args():
 if __name__ == '__main__':
   args = parse_args()
 
+  if os.path.exists(args.output_dir):
+    print("Output path  exists. Bailing out")
+    sys.exit(1)
+
   train_dir = os.path.join(args.imagenet_dir, 'train')
   val_dir = os.path.join(args.imagenet_dir, 'val')
 
   print('Loading file names')
 
-  train_files = glob.glob('*.JPEG', train_dir)
-  val_files = glob.glob('*.JPEG', val_dir)
+  train_files = glob.glob(f'{train_dir}/*.JPEG')
+  val_files = glob.glob(f'{val_dir}/*.JPEG')
 
   print(f'Found {len(train_files)} training files and {len(val_files)} validation files.')
 
@@ -41,7 +46,8 @@ if __name__ == '__main__':
   per_class = {}
 
   for fname in tqdm.tqdm(train_files):
-    suffix, ext = os.path.splitext(f)
+    bname = os.path.basename(fname)
+    suffix, ext = os.path.splitext(bname)
 
     cls, id = suffix.split('_')
 
